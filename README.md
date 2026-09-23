@@ -63,6 +63,29 @@ Settings are read from environment variables (defaults are for local development
 | `DJANGO_EMAIL_HOST`, `DJANGO_EMAIL_PORT`, `DJANGO_EMAIL_HOST_USER`, `DJANGO_EMAIL_HOST_PASSWORD`, `DJANGO_EMAIL_USE_TLS` | SMTP settings for real email delivery |
 | `DJANGO_DEFAULT_FROM_EMAIL` | `NYC Event Explorer <no-reply@nyceventexplorer.local>` |
 
+## Deployment (Vercel)
+
+Vercel detects Django automatically (via `manage.py`), runs `collectstatic` during the
+build and serves static files from its CDN. The app's own `*.vercel.app` domains are
+added to `ALLOWED_HOSTS` automatically.
+
+1. In Vercel, **Add New → Project** and import this GitHub repository.
+2. Before the first deploy, add environment variables:
+   `DJANGO_DEBUG=False` and `DJANGO_SECRET_KEY=<long random string>`.
+3. Add a Postgres database: project → **Storage** → create/connect a Postgres
+   provider (e.g. Neon). This sets `DATABASE_URL`. SQLite does not work on Vercel
+   because its filesystem is read-only and not persistent.
+4. Deploy, then create the tables and the first admin from your own machine using the
+   same database URL:
+   ```bash
+   export DATABASE_URL="<the DATABASE_URL value from Vercel>"
+   python manage.py migrate
+   python manage.py create_admin
+   ```
+   Re-run `migrate` this way whenever a change adds migrations.
+
+Password-reset emails go to the Vercel function logs until `DJANGO_EMAIL_*` is configured.
+
 ## Deployment (AWS Elastic Beanstalk)
 
 The app is production-ready: gunicorn serves it (`Procfile`), whitenoise serves static

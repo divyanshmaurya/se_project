@@ -32,6 +32,13 @@ ALLOWED_HOSTS = [
     if h.strip()
 ]
 
+# On Vercel, accept the deployment's own domains (Vercel system variables).
+ON_VERCEL = bool(os.environ.get("VERCEL"))
+if ON_VERCEL:
+    for var in ("VERCEL_URL", "VERCEL_BRANCH_URL", "VERCEL_PROJECT_PRODUCTION_URL"):
+        if os.environ.get(var):
+            ALLOWED_HOSTS.append(os.environ[var])
+
 # Full origins (scheme + host) allowed to submit forms over HTTPS,
 # e.g. "https://nyc-events.us-east-1.elasticbeanstalk.com".
 CSRF_TRUSTED_ORIGINS = [
@@ -151,15 +158,18 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+if DEBUG:
+    STATICFILES_BACKEND = "django.contrib.staticfiles.storage.StaticFilesStorage"
+elif ON_VERCEL:
+    # Vercel collects static files at build time and serves them from its
+    # CDN; the hashed-filename manifest isn't available to the function.
+    STATICFILES_BACKEND = "whitenoise.storage.CompressedStaticFilesStorage"
+else:
+    STATICFILES_BACKEND = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {
-        "BACKEND": (
-            "django.contrib.staticfiles.storage.StaticFilesStorage"
-            if DEBUG
-            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
-        )
-    },
+    "staticfiles": {"BACKEND": STATICFILES_BACKEND},
 }
 
 

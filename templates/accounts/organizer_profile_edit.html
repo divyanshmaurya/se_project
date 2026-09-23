@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Edit organizer profile · NYC Event Explorer{% endblock %}
+{% block content %}
+<div class="panel">
+  <h1>Edit organizer profile</h1>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "includes/form.html" %}
+    <button type="submit">Save changes</button>
+    <a href="{% url 'accounts:organizer_dashboard' %}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

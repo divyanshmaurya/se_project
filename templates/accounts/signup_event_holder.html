@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Event holder sign up · NYC Event Explorer{% endblock %}
+{% block content %}
+<div class="panel">
+  <h1>Create a business account</h1>
+  <p class="muted">For organizers who host events in New York City.</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "includes/form.html" %}
+    <button type="submit">Create business account</button>
+  </form>
+  <p>Just looking for events? <a href="{% url 'accounts:signup_user' %}">Create a user account</a></p>
+</div>
+{% endblock %}

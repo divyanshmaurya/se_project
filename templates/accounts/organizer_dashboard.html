@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Organizer dashboard · NYC Event Explorer{% endblock %}
+{% block content %}
+<div class="panel">
+  <h1>{{ organizer.organization_name }}</h1>
+  <p class="muted">Organizer dashboard · @{{ user.handle }}</p>
+  <dl>
+    <dt>Description</dt><dd>{{ organizer.description|default:"—"|linebreaksbr }}</dd>
+    <dt>Website</dt><dd>{{ organizer.website|default:"—" }}</dd>
+    <dt>Contact email</dt><dd>{{ organizer.contact_email|default:"—" }}</dd>
+    <dt>Phone</dt><dd>{{ organizer.phone|default:"—" }}</dd>
+  </dl>
+  <p>
+    <a class="button" href="{% url 'accounts:organizer_profile_edit' %}">Edit organizer profile</a>
+    <a class="button secondary" href="{% url 'accounts:profile_edit' %}">Edit account details</a>
+    <a class="button secondary" href="{{ user.get_absolute_url }}">View public page</a>
+  </p>
+  <p class="muted">Event listing management is coming in a later epic.</p>
+</div>
+{% endblock %}

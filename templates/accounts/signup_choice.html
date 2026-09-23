@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Sign up · NYC Event Explorer{% endblock %}
+{% block content %}
+<h1>Create an account</h1>
+<div class="cards">
+  <a class="card" href="{% url 'accounts:signup_user' %}">
+    <h2>I want to find events</h2>
+    <p>Search events, save favorites, build personal plans and meet people going to the same events.</p>
+  </a>
+  <a class="card" href="{% url 'accounts:signup_event_holder' %}">
+    <h2>I host events</h2>
+    <p>Create a business account to manage your event listings and engage with your community.</p>
+  </a>
+</div>
+<p>Already have an account? <a href="{% url 'accounts:login' %}">Log in</a></p>
+{% endblock %}

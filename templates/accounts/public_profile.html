@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ profile_user.display_name }} · NYC Event Explorer{% endblock %}
+{% block content %}
+<div class="panel">
+  {% if profile_user.is_event_holder and profile_user.organizer_profile %}
+    {% with org=profile_user.organizer_profile %}
+      <h1>{{ org.organization_name }}</h1>
+      <p class="muted">@{{ profile_user.handle }} · Event holder</p>
+      {% if org.description %}<p>{{ org.description|linebreaksbr }}</p>{% endif %}
+      <dl>
+        {% if org.website %}<dt>Website</dt><dd><a href="{{ org.website }}" rel="noopener nofollow" target="_blank">{{ org.website }}</a></dd>{% endif %}
+        {% if org.contact_email %}<dt>Contact</dt><dd>{{ org.contact_email }}</dd>{% endif %}
+        {% if org.phone %}<dt>Phone</dt><dd>{{ org.phone }}</dd>{% endif %}
+      </dl>
+    {% endwith %}
+  {% else %}
+    <h1>{{ profile_user.display_name }}</h1>
+    <p class="muted">@{{ profile_user.handle }}</p>
+    {% if profile_user.home_borough %}<p>Based in {{ profile_user.get_home_borough_display }}</p>{% endif %}
+    {% if profile_user.bio %}<p>{{ profile_user.bio|linebreaksbr }}</p>{% endif %}
+  {% endif %}
+</div>
+{% endblock %}

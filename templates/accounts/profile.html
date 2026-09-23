@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}My profile · NYC Event Explorer{% endblock %}
+{% block content %}
+<div class="panel">
+  <h1>{{ profile_user.display_name }}</h1>
+  {% if profile_user.handle %}<p class="muted">@{{ profile_user.handle }}</p>{% endif %}
+  <dl>
+    <dt>Email</dt><dd>{{ profile_user.email }}</dd>
+    <dt>Account type</dt><dd>{{ profile_user.get_role_display }}</dd>
+    <dt>Home borough</dt><dd>{{ profile_user.get_home_borough_display|default:"—" }}</dd>
+    <dt>Bio</dt><dd>{{ profile_user.bio|default:"—"|linebreaksbr }}</dd>
+    <dt>Member since</dt><dd>{{ profile_user.date_joined|date:"F j, Y" }}</dd>
+  </dl>
+  <p>
+    <a class="button" href="{% url 'accounts:profile_edit' %}">Edit profile</a>
+    <a class="button secondary" href="{% url 'accounts:password_change' %}">Change password</a>
+    {% if profile_user.handle %}<a class="button secondary" href="{{ profile_user.get_absolute_url }}">View public profile</a>{% endif %}
+  </p>
+</div>
+{% endblock %}

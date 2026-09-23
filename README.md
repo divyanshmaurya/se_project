@@ -52,12 +52,53 @@ Settings are read from environment variables (defaults are for local development
 
 | Variable | Default |
 |---|---|
-| `DJANGO_SECRET_KEY` | insecure dev key — **set in production** |
+| `DJANGO_SECRET_KEY` | insecure dev key — **required** when `DJANGO_DEBUG` is off |
 | `DJANGO_DEBUG` | `True` |
 | `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | empty — full origins, e.g. `https://example.com` |
+| `DATABASE_URL` | SQLite file `db.sqlite3` — use PostgreSQL in production |
+| `DJANGO_SECURE_SSL_REDIRECT` | `True` when `DJANGO_DEBUG` is off |
+| `DJANGO_SECURE_HSTS_SECONDS` | `0` |
 | `DJANGO_EMAIL_BACKEND` | console backend |
 | `DJANGO_EMAIL_HOST`, `DJANGO_EMAIL_PORT`, `DJANGO_EMAIL_HOST_USER`, `DJANGO_EMAIL_HOST_PASSWORD`, `DJANGO_EMAIL_USE_TLS` | SMTP settings for real email delivery |
 | `DJANGO_DEFAULT_FROM_EMAIL` | `NYC Event Explorer <no-reply@nyceventexplorer.local>` |
+
+## Deployment (AWS Elastic Beanstalk)
+
+The app is production-ready: gunicorn serves it (`Procfile`), whitenoise serves static
+files, `DATABASE_URL` selects the database, and `/healthz/` answers load-balancer health
+checks. EB-specific config lives in `.ebextensions/` and `.platform/`
+(migrations run on deploy; static files are collected before each deploy).
+
+SQLite is only for local development — production needs PostgreSQL, because EB
+instances are replaced and their disks wiped.
+
+```bash
+pip install awsebcli
+eb init nyc-event-explorer --platform "Python 3.12" --region us-east-1
+eb create nyc-events-prod --single            # or omit --single for a load balancer
+```
+
+Create a PostgreSQL database (Amazon RDS, kept separate from the EB environment so it
+survives environment rebuilds), allow the EB instances' security group to reach it on
+port 5432, then set the environment variables:
+
+```bash
+eb setenv \
+  DJANGO_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')" \
+  DJANGO_ALLOWED_HOSTS="<env-name>.<region>.elasticbeanstalk.com" \
+  DJANGO_CSRF_TRUSTED_ORIGINS="http://<env-name>.<region>.elasticbeanstalk.com" \
+  DATABASE_URL="postgres://<user>:<password>@<rds-endpoint>:5432/<dbname>"
+eb deploy
+eb ssh -c "cd /var/app/current && source /var/app/venv/*/bin/activate && python manage.py create_admin"
+```
+
+Once HTTPS is set up on the load balancer, set `DJANGO_SECURE_SSL_REDIRECT=True`,
+use `https://` in `DJANGO_CSRF_TRUSTED_ORIGINS`, and consider `DJANGO_SECURE_HSTS_SECONDS`.
+For real password-reset emails, set the `DJANGO_EMAIL_*` variables (e.g. Amazon SES SMTP).
+
+The same `Procfile` and settings also work on Heroku, Railway or Render
+(add `python manage.py migrate` and `collectstatic` as release/build steps there).
 
 ## Project layout
 

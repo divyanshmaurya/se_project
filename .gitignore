@@ -9,3 +9,7 @@ staticfiles/
 .DS_Store
 .idea/
 .vscode/
+# Elastic Beanstalk CLI
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

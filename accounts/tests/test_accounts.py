@@ -371,3 +371,11 @@ class AdminProvisioningTests(TestCase):
         self.client.logout()
         self.client.login(email="second@example.com", password=PASSWORD)
         self.assertEqual(self.client.get(reverse("admin:index")).status_code, 200)
+
+
+class HealthCheckTests(TestCase):
+    def test_health_check_ignores_host_validation(self):
+        # Load balancers probe by private IP, which is not in ALLOWED_HOSTS.
+        response = self.client.get("/healthz/", HTTP_HOST="10.0.1.23")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"ok")

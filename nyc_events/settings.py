@@ -21,7 +21,10 @@ def env_bool(name, default=False):
 DEV_SECRET_KEY = "django-insecure-dev-only-change-me-in-production"
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", DEV_SECRET_KEY)
 
-DEBUG = env_bool("DJANGO_DEBUG", True)
+ON_VERCEL = bool(os.environ.get("VERCEL"))
+
+# Debug is on by default locally, but never by default on Vercel.
+DEBUG = env_bool("DJANGO_DEBUG", not ON_VERCEL)
 
 if not DEBUG and SECRET_KEY == DEV_SECRET_KEY:
     raise ImproperlyConfigured("Set DJANGO_SECRET_KEY when DJANGO_DEBUG is off.")
@@ -33,7 +36,6 @@ ALLOWED_HOSTS = [
 ]
 
 # On Vercel, accept the deployment's own domains (Vercel system variables).
-ON_VERCEL = bool(os.environ.get("VERCEL"))
 if ON_VERCEL:
     for var in ("VERCEL_URL", "VERCEL_BRANCH_URL", "VERCEL_PROJECT_PRODUCTION_URL"):
         if os.environ.get(var):
@@ -95,9 +97,19 @@ WSGI_APPLICATION = "nyc_events.wsgi.application"
 # SQLite locally; in production set DATABASE_URL, e.g.
 # postgres://user:password@host:5432/dbname
 
+# Vercel Postgres integrations (e.g. Neon) may set POSTGRES_URL instead.
+DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
+
+if ON_VERCEL and not DATABASE_URL:
+    # Vercel's filesystem is read-only, so the SQLite fallback cannot work there.
+    raise ImproperlyConfigured(
+        "No database configured: connect a Postgres database in Vercel "
+        "(Storage tab) so DATABASE_URL is set, then redeploy."
+    )
+
 DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+    "default": dj_database_url.parse(
+        DATABASE_URL or f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
         conn_max_age=600,
         conn_health_checks=True,
     )
